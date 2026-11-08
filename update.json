@@ -1,9 +1,9 @@
 {
-  "versionCode": 10000,
-  "versionName": "1.0.0",
-  "url": "https://gh-proxy.com/https://github.com/keynggsong-lab/-storage-emulated-0-Download-dshgo-/releases/download/1.0.0/DshGoTool.apk",
-  "sha256": "c2843aa50e7b23882afa27e35453d291f1d7b2b25837a03cd44a341d54880748",
-  "size": 2332355,
-  "notes": "首个公开版本：状态自检（root / 目标包名 / DSH_HOME）、提示词分层与方案快照、插件一键注入与按版本打补丁、网关启停与开关、运行日志、云更新检查。",
-  "minSupported": 9900
+    "versionCode":  10001,
+    "versionName":  "1.0.1",
+    "url":  "https://gh-proxy.com/https://github.com/keynggsong-lab/-storage-emulated-0-Download-dshgo-/releases/download/1.0.1/DshGoTool.apk",
+    "sha256":  "4787479aae78025816ac9e601a283e0ae80128586f63999a0278bc3ce8c1997a",
+    "size":  2332355,
+    "notes":  "淇锛氶噸鍚?7863 璁や笉鍑轰笂娓哥▼搴忓悕銆?\n涓婃父鐩綍閲岃繕鏈?dnsfix 杩欑被杈呭姪绋嬪簭锛屾寜鈥滅涓€涓棤鎵╁睍鍚嶇殑鍙墽琛屾枃浠垛€濇寫浼氭寫閿欙紝缁撴灉鏄妸杩涚▼鏉€浜嗗張璧蜂笉鏉ャ€佹姤鈥滆繕鍦ㄧ洃鍚紝鏉€涓嶆帀鈥濄€?鐜板湪鍏堥棶 7863 绔彛涓婃鍦ㄨ窇鐨勮繘绋嬪彨浠€涔堬紙鐩存帴璇?/proc/\u003cpid\u003e/comm锛夛紝璁や笉鍑烘潵鎵嶉€€鍥炴寜鍚嶅瓧鐚溿€?",
+    "minSupported":  9901
 }

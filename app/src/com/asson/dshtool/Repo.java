@@ -246,16 +246,41 @@ public final class Repo {
      * 7863 直接下线。手动重启不需要它的开机逻辑（config/prompt 恢复、CA、dnsfix），
      * 所以这里只做「按 pid 文件杀 → 等端口释放 → 直接拉起」。
      */
-    /** 目录里第一个「没有扩展名且可执行」的文件 —— 上游那个二进制。找不到就退回 wb2api。 */
+    /**
+     * 找出上游二进制的名字。
+     *
+     * 顺序：手动配的 → **7863 端口上正在跑的那个进程名**（最准，直接问内核）
+     *      → 目录里名字像网关的 → 目录里第一个无扩展名的可执行文件。
+     *
+     * 不能只靠「第一个无扩展名可执行」：目录里还有 dnsfix 这种辅助程序，
+     * 按字母序它会排在 wb2api 前面，一挑错就会去杀/起错东西。
+     */
     public static String pickUpstreamBin(DshPaths dp) {
         String configured = dp.upstreamBin();
         if (!configured.isEmpty() && RootShell.exists(dp.upstreamDir() + "/" + configured)) {
             return configured;
         }
+
+        // ① 问内核：7863 上正在监听的进程叫什么
+        String comm = RootShell.exec(
+                "P=$(ss -ltnp 2>/dev/null | grep ':7863 ' | sed -n 's/.*pid=\\([0-9]*\\).*/\\1/p' | head -1); "
+                        + "[ -n \"$P\" ] && cat /proc/$P/comm 2>/dev/null", 12).text();
+        if (!comm.isEmpty()) {
+            String name = comm.split("\n")[0].trim();
+            if (!name.isEmpty()) return name;
+        }
+
+        // ② 名字像网关的
+        for (String n : new String[]{"wb2api", "gateway", "upstream", "api", "server", "proxy"}) {
+            if (RootShell.exists(dp.upstreamDir() + "/" + n)) return n;
+        }
+
+        // ③ 兜底：无扩展名的可执行文件，跳过已知辅助工具
         String ls = RootShell.exec("ls -1 " + RootShell.q(dp.upstreamDir()) + " 2>/dev/null", 10).out;
         for (String raw : ls.split("\n")) {
             String n = raw.trim();
             if (n.isEmpty() || n.contains(".")) continue;
+            if (n.equals("dnsfix") || n.equals("pid") || n.equals("guard") || n.equals("watchdog")) continue;
             if ("1".equals(RootShell.exec("[ -x " + RootShell.q(dp.upstreamDir() + "/" + n)
                     + " ] && echo 1", 8).text())) {
                 return n;
