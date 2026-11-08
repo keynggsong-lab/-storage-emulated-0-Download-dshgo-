@@ -1,0 +1,22 @@
+第三方组件声明
+================
+
+本仓库的 App 源码（app/src 下 12 个 Java 文件、build.ps1、docs）版权归 Asson，按 MIT 授权。
+
+App 内置的插件包 assets/plugin-payload.tar 内是 dsh-purge 的修改版，属第三方：
+
+  dsh-purge
+  上游作者：YuJunZhiXue（原仓库已删除）
+  上游许可证：MIT License
+  可用镜像：https://github.com/mmparko/dsh-purge （保留完整提交历史与 tag）
+            https://github.com/kingcharleslzy-ai/dsh-purge （社区维护版）
+  本仓库内置版本：1.1.46（基于上游改造，补丁表按 DSH 0.2.x 抽出）
+  改动点：
+    - 只保留 plugins/dsh-purge/ 与运行状态 state/*.json，不再携带任何提示词内容
+    - 安装/清洗/还原由 App 的 PluginRepo 调用其 CLI 完成，未修改其补丁表语义
+
+上游 MIT 许可要求保留原版权声明。原项目 README 另有「二开请署名」的社区约定，
+本仓库在 README「第三方」一节保留了指向上游的链接与作者名。
+
+宿主 DSH（@deepseek-ai/dsh，MIT，https://github.com/deepseek-ai/deepseek-harness）
+不在本仓库内分发，本 App 只是在运行时读写它的配置文件与进程，属独立程序互操作。

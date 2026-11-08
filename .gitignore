@@ -1,0 +1,16 @@
+# 构建产物
+out/
+build/
+*.apk
+*.idsig
+
+# 本地备份（提示词包、图标、旧脚本）
+payload-bak/
+icon-bak/
+*.bak-*
+*.bak_MR-*
+
+# 签名与密钥
+*.keystore
+*.jks
+local.properties
