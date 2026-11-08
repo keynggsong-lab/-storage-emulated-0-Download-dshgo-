@@ -108,7 +108,7 @@ public final class Repo {
             if (sp <= 0) continue;
             String pid = t.substring(0, sp);
             String cmd = t.substring(sp + 1).trim();
-            if (cmd.contains("wb2api") || cmd.contains("proxy.js")
+            if (cmd.contains("proxy.js")
                     || cmd.contains("dsh") || cmd.contains("node")) {
                 res.add(new String[]{pid, cmd});
                 if (res.size() >= 20) break;
@@ -237,7 +237,7 @@ public final class Repo {
     }
 
     /**
-     * 重启 7863（wb2api）。
+     * 重启 7863（网关上游）。
      * 它不归 gw-up.sh / gw-down.sh 管 —— 那两只只认 proxy.js(7864) 和 watchdog.sh。
      *
      * 为什么不调 boot-start.sh：那个脚本里 running() / dnsfix_running() 会遍历
@@ -246,31 +246,51 @@ public final class Repo {
      * 7863 直接下线。手动重启不需要它的开机逻辑（config/prompt 恢复、CA、dnsfix），
      * 所以这里只做「按 pid 文件杀 → 等端口释放 → 直接拉起」。
      */
-    public static RootShell.Res wb2Restart(DshPaths dp) {
+    /** 目录里第一个「没有扩展名且可执行」的文件 —— 上游那个二进制。找不到就退回 wb2api。 */
+    public static String pickUpstreamBin(DshPaths dp) {
+        String configured = dp.upstreamBin();
+        if (!configured.isEmpty() && RootShell.exists(dp.upstreamDir() + "/" + configured)) {
+            return configured;
+        }
+        String ls = RootShell.exec("ls -1 " + RootShell.q(dp.upstreamDir()) + " 2>/dev/null", 10).out;
+        for (String raw : ls.split("\n")) {
+            String n = raw.trim();
+            if (n.isEmpty() || n.contains(".")) continue;
+            if ("1".equals(RootShell.exec("[ -x " + RootShell.q(dp.upstreamDir() + "/" + n)
+                    + " ] && echo 1", 8).text())) {
+                return n;
+            }
+        }
+        return "wb2api";
+    }
+
+    public static RootShell.Res upstreamRestart(DshPaths dp) {
+        String bin = pickUpstreamBin(dp);
         String cmd =
-                "D=" + RootShell.q(dp.wb2apiDir()) + "; P=$D/pid; PORT=7863; " +
+                "D=" + RootShell.q(dp.upstreamDir()) + "; B=" + RootShell.q(bin)
+                        + "; P=$D/pid; PORT=7863; " +
                 "up(){ ss -ltn 2>/dev/null | grep -q \":$PORT \"; }; " +
                 // 1) 杀：pid 文件 + pgrep 精确名（pgrep 是 C 实现，不会像 shell readlink 那样卡死）
                 //    pid 文件先验 comm，防止文件里是别的进程（比如 dsh）时误杀
                 "if [ -f $P ]; then K=$(cat $P 2>/dev/null); " +
-                "[ -n \"$K\" ] && [ \"$(cat /proc/$K/comm 2>/dev/null)\" = wb2api ] && kill $K 2>/dev/null; fi; " +
-                "for p in $(pgrep -x wb2api 2>/dev/null); do kill $p 2>/dev/null; done; " +
+                "[ -n \"$K\" ] && [ \"$(cat /proc/$K/comm 2>/dev/null)\" = \"$B\" ] && kill $K 2>/dev/null; fi; " +
+                "for p in $(pgrep -x \"$B\" 2>/dev/null); do kill $p 2>/dev/null; done; " +
                 // 2) 等端口释放，最多 8 秒，不行再 -9
                 "n=0; while up && [ $n -lt 8 ]; do n=$((n+1)); sleep 1; done; " +
-                "if up; then for p in $(pgrep -x wb2api 2>/dev/null); do kill -9 $p 2>/dev/null; done; sleep 2; fi; " +
+                "if up; then for p in $(pgrep -x \"$B\" 2>/dev/null); do kill -9 $p 2>/dev/null; done; sleep 2; fi; " +
                 "if up; then echo \"7863 还在监听，杀不掉（pid 文件可能过期）\"; exit 1; fi; " +
                 // 3) 拉起：环境变量照 boot-start.sh 那套，Go 不认 Android 的证书目录布局
                 "cd $D || exit 1; " +
                 "SSL_CERT_FILE=$D/ca-bundle.pem SSL_CERT_DIR=/system/etc/security/cacerts " +
-                "nohup setsid ./wb2api >> $D/run.log 2>&1 < /dev/null & " +
+                "nohup setsid ./\"$B\" >> $D/run.log 2>&1 < /dev/null & " +
                 // 4) 等健康，最多 20 秒
                 "n=0; while [ $n -lt 20 ]; do sleep 1; up && break; n=$((n+1)); done; " +
-                // 5) 回写真实 pid（setsid 会 fork，$! 不是 wb2api 的 pid；必须按端口过滤取，
+                // 5) 回写真实 pid（setsid 会 fork，$! 不是上游的 pid；必须按端口过滤取，
                 //    直接 head -1 会拿到别的监听进程 —— 曾经写进去的是 dsh 的 node pid，
                 //    下次重启就会把 dsh 自己杀掉）
                 "NEW=$(ss -ltnp 2>/dev/null | grep \":$PORT \" | sed -n 's/.*pid=\\([0-9]*\\).*/\\1/p' | head -1); " +
                 "[ -n \"$NEW\" ] && echo $NEW > $P; " +
-                "if up; then echo \"7863 已重启 pid=$NEW\"; else echo \"7863 启动失败，看 run.log\"; exit 1; fi";
+                "if up; then echo \"7863 已重启 pid=$NEW（$B）\"; else echo \"7863 启动失败，看 run.log\"; exit 1; fi";
         return RootShell.exec(cmd, 60);
     }
 
@@ -360,7 +380,7 @@ public final class Repo {
         return dedupe(dirs);
     }
 
-    public static List<String> detectWb2apiDir() {
+    public static List<String> detectUpstreamDir() {
         String cmd =
                 "for d in /data/adb/wb2api /data/adb/wb2api-guard; do " +
                         "[ -f \"$d/config.json\" ] && echo \"$d\"; done; " +

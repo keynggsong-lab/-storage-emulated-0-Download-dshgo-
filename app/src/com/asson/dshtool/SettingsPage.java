@@ -111,7 +111,8 @@ public final class SettingsPage {
         // 手动指定（默认折叠）
         final LinearLayout manualBox = Ui.v(act);
         manualBox.setVisibility(View.GONE);
-        final EditText wb2 = field(act, manualBox, "网关（上游）目录", dp.wb2apiDir());
+        final EditText wb2 = field(act, manualBox, "网关（上游）目录", dp.upstreamDir());
+        final EditText upBin = field(act, manualBox, "上游程序名（留空自动找）", dp.upstreamBin());
         final EditText guard = field(act, manualBox, "兜底目录", dp.guardDir());
         final EditText gw = field(act, manualBox, "gw 目录", dp.gwDir());
         final EditText home = field(act, manualBox, "DSH_HOME", dp.dshHome());
@@ -497,7 +498,8 @@ public final class SettingsPage {
 
         savePath.setOnClickListener(new View.OnClickListener() {
             @Override public void onClick(View v) {
-                dp.setWb2apiDir(wb2.getText().toString().trim());
+                dp.setUpstreamDir(wb2.getText().toString().trim());
+                dp.setUpstreamBin(upBin.getText().toString().trim());
                 dp.setGuardDir(guard.getText().toString().trim());
                 dp.setGwDir(gw.getText().toString().trim());
                 dp.setDshHome(home.getText().toString().trim());

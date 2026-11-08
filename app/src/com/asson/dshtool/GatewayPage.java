@@ -153,7 +153,7 @@ public final class GatewayPage {
         };
 
         // ---------- 刷新 ----------
-        // 7863 是 wb2api，有独立守护链，不归 gw 脚本管；按钮放在端口卡里，跟它管的端口挨着
+        // 7863 是上游，有独立守护链，不归网关脚本管；按钮放在端口卡里，跟它管的端口挨着
         final Button wb2Restart = Ui.button(act, "重启 7863", null);
 
         final Runnable refreshPorts = new Runnable() {
@@ -266,7 +266,7 @@ final Runnable loadWarm = new Runnable() {
                 out.setText("重启 7863 中…");
                 new Thread(new Runnable() {
                     @Override public void run() {
-                        final RootShell.Res r = Repo.wb2Restart(dp);
+                        final RootShell.Res r = Repo.upstreamRestart(dp);
                         act.runOnUiThread(new Runnable() {
                             @Override public void run() {
                                 out.setText(r.out.isEmpty() ? "完成" : r.out);

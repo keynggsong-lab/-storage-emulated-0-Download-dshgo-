@@ -18,7 +18,7 @@ public final class LogPage {
         LinearLayout head = Ui.h(act);
         final Button[] tabs = new Button[3];
         final String[] labels = {"网关", "兜底", "上游"};
-        final String[] paths = {dp.gwLog(), dp.guardLog(), dp.wb2Log()};
+        final String[] paths = {dp.gwLog(), dp.guardLog(), dp.upstreamLog()};
         for (int i = 0; i < 3; i++) {
             final int idx = i;
             tabs[i] = Ui.button(act, labels[i], null);

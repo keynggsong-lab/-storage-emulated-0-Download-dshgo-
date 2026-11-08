@@ -17,7 +17,7 @@ import java.io.OutputStream;
  * 避免换机器时把别的 App 或系统目录写坏。
  *
  * 注入通道有两套，本类只负责「本地」那套（dsh-purge override + AGENTS.md）：
- *   - 有网关：proxy SLOT_TEXT + wb2api system 是主通道，本插件是叠加层
+ *   - 有网关：网关自己的 SLOT / system 是主通道，本插件是叠加层
  *   - 无网关（新手机走官方账号）：本地这套就是唯一通道，所以必须能独立装起来
  */
 public final class PluginRepo {
@@ -345,7 +345,7 @@ public final class PluginRepo {
         sb.append('\n');
         boolean hasGw = !"0".equals(gw);
         sb.append("注入通道  ").append(hasGw
-                ? "网关层在线（7863）—— proxy SLOT + wb2api system 为主，本插件叠加"
+                ? "网关层在线（7863）—— 以网关那份 system 为主，本插件叠加"
                 : "无网关 —— 本地通道（dsh-purge override + AGENTS.md）是唯一注入来源").append('\n');
         String[] c = compat(dp);
         sb.append("宿主版本  ").append(c[0]).append(" —— ").append(c[1]).append('\n');

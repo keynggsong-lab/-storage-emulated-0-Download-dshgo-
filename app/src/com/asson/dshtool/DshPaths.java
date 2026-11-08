@@ -19,8 +19,16 @@ public final class DshPaths {
         this.sp = ctx.getSharedPreferences("dsh_paths", Context.MODE_PRIVATE);
     }
 
-    public String wb2apiDir() { return sp.getString("wb2api", "/data/adb/wb2api"); }
-    public void setWb2apiDir(String v) { sp.edit().putString("wb2api", v).apply(); }
+    /** 上游（网关第一层）的目录。pref key 沿用旧名，免得已装用户升级后丢配置。 */
+    public String upstreamDir() { return sp.getString("wb2api", "/data/adb/wb2api"); }
+    public void setUpstreamDir(String v) { sp.edit().putString("wb2api", v).apply(); }
+
+    /**
+     * 上游程序的文件名（目录里那个可执行文件）。各家不一样，默认 wb2api；
+     * 留空时由 Repo 在目录里自动挑第一个没有扩展名的可执行文件。
+     */
+    public String upstreamBin() { return sp.getString("upstream_bin", ""); }
+    public void setUpstreamBin(String v) { sp.edit().putString("upstream_bin", v).apply(); }
 
     public String guardDir() { return sp.getString("guard", "/data/adb/wb2api-guard"); }
     public void setGuardDir(String v) { sp.edit().putString("guard", v).apply(); }
@@ -98,10 +106,10 @@ public final class DshPaths {
     public boolean profileLocked() { return sp.getBoolean("profile_lock", false); }
     public void setProfileLocked(boolean v) { sp.edit().putBoolean("profile_lock", v).apply(); }
 
-    /** wb2api 每请求读取，真正发给模型的 system。 */
-    public String wb2Prompt() { return wb2apiDir() + "/prompt-inject.md"; }
-    public String wb2Config() { return wb2apiDir() + "/config.json"; }
-    public String wb2Log() { return wb2apiDir() + "/run.log"; }
+    /** 上游每请求读取，真正发给模型的 system。 */
+    public String upstreamPrompt() { return upstreamDir() + "/prompt-inject.md"; }
+    public String upstreamConfig() { return upstreamDir() + "/config.json"; }
+    public String upstreamLog() { return upstreamDir() + "/run.log"; }
 
     /** guard 的兜底副本，网关挂了由 guard.sh / jiapo.sh 写回。 */
     public String guardPrompt() { return guardDir() + "/prompt-inject.md"; }
@@ -162,7 +170,7 @@ public final class DshPaths {
     /**
      * {label, path, hint, group} —— hint 写清楚这份文件管什么、改完怎么生效。
      * 状态页与提示词页都直接显示，不让人猜。
-     * 按注入层分组，跟 PC 面板一致：本地注入（dsh 自己组 system）/ 网关注入（proxy 与 wb2api）。
+     * 按注入层分组：本地注入（宿主自己组 system）/ 网关注入（网关代理与上游）。
      */
     public List<String[]> keyFiles() {
         List<String[]> l = new ArrayList<>();
@@ -182,12 +190,12 @@ public final class DshPaths {
         l.add(new String[]{"dsh-purge override", dshPrompt(),
                 "插件写进去的系统提示词。没装插件就是空的。", G_LOCAL});
 
-        // ---- 网关注入 · wb2api / proxy 侧 ----
-        l.add(new String[]{"网关 system", wb2Prompt(),
+        // ---- 网关注入 · 网关侧 ----
+        l.add(new String[]{"网关 system", upstreamPrompt(),
                 "走网关时真正发给模型的那份。改完下一条消息生效，不用重启。", G_GW});
         l.add(new String[]{"兜底副本", guardPrompt(),
                 "兜底副本。网关出故障时自动写回上面那份，平时不用管。", G_GW});
-        l.add(new String[]{"网关 config", wb2Config(),
+        l.add(new String[]{"网关 config", upstreamConfig(),
                 "网关自己的配置。改完要重启网关才生效。", G_GW});
         l.add(new String[]{"trigger.txt", gwTrigger(),
                 "触发词：命中才注入预热。改完重启网关。", G_GW});
