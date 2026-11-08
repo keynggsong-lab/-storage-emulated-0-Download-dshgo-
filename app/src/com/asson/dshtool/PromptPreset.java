@@ -250,7 +250,7 @@ public final class PromptPreset {
 
     /**
      * 从 zip 导入。zip 里可以有多个文件，按**文件名**归位（放子目录也行，只认 basename）：
-     *   prompt-inject.md  → 所有提示词层（dsh / wb2api / guard）
+     *   prompt-inject.md  → 所有提示词层（宿主 override / 上游 / 兜底）
      *   AGENTS.md         → 工作区指令
      *   personaPrefix.txt → 人格前缀
      * 其他文件名忽略，并在结果里列出来，免得用户以为没导进去。

@@ -25,9 +25,9 @@ public final class PluginRepo {
     /**
      * 只认这一个包名。
      *
-     * 不是 final：启动时会用 Repo.detectDshPkg() 探一遍，谁家把 DSH GO 换名重签了，
-     * 这里就跟着换 —— 否则范围校验（inScope）会把所有写操作全拒掉。
-     * 探不到就保持默认值，行为跟以前一致。
+     * 这是「默认目标包名」，不是写死的目标：启动时 Repo.detectDshPkgs() 会扫一遍已装应用，
+     * 谁家把 DSH GO 换名重签了，这里就跟着换 —— 否则范围校验（inScope）会把写操作全拒掉。
+     * 一个都探不到时才回落到这个默认值。
      */
     public static String PKG = "io.github.ccch1mneyyy.dsh_app";
 
