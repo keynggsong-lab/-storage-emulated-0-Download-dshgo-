@@ -63,7 +63,14 @@ powershell -ExecutionPolicy Bypass -File D:\ace5\build_dshtool\build.ps1
 - `aapt2` 不吃中文路径 —— 先同步到英文目录再构建
 - 必须用 `/MIR`，`/E` 会留下已删的旧 `.class`
 
-产物 `out/DshGoTool.apk`，`versionCode` 按 `yyMMddHH` 自增。
+产物 `out/DshGoTool.apk`。
+
+**版本号**写在 `app/version.txt`，语义化三段落 `1.0.0`；`versionCode` 由脚本算：
+`major*10000 + minor*100 + patch`（`1.0.0` → `10000`，`1.0.1` → `10001`）。
+发新版只改这一行，`versionCode` 自动单调递增 —— 云更新比的正是它。
+
+打包脚本还会生成 `update.json`（versionCode / versionName / url / sha256 / size / notes / minSupported），
+`notes` 取自 `app/notes.txt`，下载地址按 `releases/download/v<versionName>/DshGoTool.apk` 拼。
 
 ## 签名
 

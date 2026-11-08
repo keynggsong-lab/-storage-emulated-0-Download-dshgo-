@@ -27,10 +27,13 @@ Write-Output "=== 1) aapt2 compile res ==="
 & "$BT\aapt2.exe" compile --dir "$APP\res" -o "$OUT\res.zip"
 if ($LASTEXITCODE -ne 0) { throw "aapt2 compile failed" }
 
-# 版本号按构建时间自增，装新版能看出区别
-$now   = Get-Date
-$VCODE = $now.ToString("yyMMddHH")
-$VNAME = "1." + $now.ToString("MMdd.HHmm")
+# 版本号从 version.txt 读（语义化：1.0.0）。versionCode = major*10000 + minor*100 + patch，
+# 必须是整数且单调递增；发新版只改 version.txt 一行。
+$VERFILE = Join-Path $APP "version.txt"
+if (-not (Test-Path $VERFILE)) { throw "missing version.txt（内容形如 1.0.0）" }
+$VNAME = (Get-Content $VERFILE -Raw).Trim()
+if ($VNAME -notmatch '^(\d+)\.(\d+)\.(\d+)$') { throw "version.txt 格式不对：$VNAME（要 1.0.0 这样）" }
+$VCODE = [int]$Matches[1] * 10000 + [int]$Matches[2] * 100 + [int]$Matches[3]
 Write-Output ("  version: " + $VNAME + " (" + $VCODE + ")")
 Write-Output "=== 2) aapt2 link ==="
 & "$BT\aapt2.exe" link -o "$OUT\base.apk" -I $PLAT --manifest "$APP\AndroidManifest.xml" `
@@ -92,7 +95,7 @@ $UPD = [ordered]@{
   url          = "https://github.com/$REPO/releases/download/v$VNAME/DshGoTool.apk"
   sha256       = $SHA
   size         = (Get-Item $APK).Length
-  notes        = ""
+  notes        = $(if (Test-Path (Join-Path $APP "notes.txt")) { (Get-Content (Join-Path $APP "notes.txt") -Raw).Trim() } else { "" })
   minSupported = [int]([int]$VCODE - 100)
 }
 $json = $UPD | ConvertTo-Json
