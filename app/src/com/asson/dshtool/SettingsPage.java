@@ -73,7 +73,8 @@ public final class SettingsPage {
         final Button diag = Ui.button(act, "诊断", null);
         final Button purgeStatus = Ui.button(act, "插件详情", null);
         final Button copyDiag = Ui.button(act, "复制", null);
-        root.addView(Ui.packRow(act, diag, purgeStatus, copyDiag), Ui.lpW());
+        final Button checkUpd = Ui.button(act, "检查更新", null);
+        root.addView(Ui.packRow(act, diag, purgeStatus, copyDiag, checkUpd), Ui.lpW());
 
         // ================= 2. 路径（自动识别，默认收起） =================
         Ui.space(act, root, 18);
@@ -240,6 +241,12 @@ public final class SettingsPage {
                         });
                     }
                 }).start();
+            }
+        });
+
+        checkUpd.setOnClickListener(new View.OnClickListener() {
+            @Override public void onClick(View v) {
+                if (act instanceof MainActivity) ((MainActivity) act).checkUpdate(true);
             }
         });
 

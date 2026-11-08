@@ -96,6 +96,22 @@ public final class DshPaths {
         return "/root/.dsh";
     }
 
+    /**
+     * 更新清单地址。默认走 gh-proxy 反代 GitHub raw —— 国内直连 raw 基本拉不动，
+     * 这个反代能通；换成自己的服务器就改这一处。
+     */
+    public String updateUrl() {
+        String v = sp.getString("update_url", "");
+        if (v != null && !v.isEmpty()) return v;
+        return "https://gh-proxy.com/https://raw.githubusercontent.com/keynggsong-lab/"
+                + "-storage-emulated-0-Download-dshgo-/main/update.json";
+    }
+    public void setUpdateUrl(String v) { sp.edit().putString("update_url", v).apply(); }
+
+    /** 启动时自动查一次更新。关掉就只在设置页手动查。 */
+    public boolean updateAuto() { return sp.getBoolean("update_auto", true); }
+    public void setUpdateAuto(boolean v) { sp.edit().putBoolean("update_auto", v).apply(); }
+
     public String profileName() { return sp.getString("profile", "web"); }
     public void setProfileName(String v) { sp.edit().putString("profile", v).apply(); }
 

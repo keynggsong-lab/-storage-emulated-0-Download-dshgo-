@@ -4,6 +4,9 @@
 
     <!-- 要在自己的选文件面板里列出所有能提供文件的 App（MT 管理器、Termux…），
          Android 11+ 必须先声明可见性，否则 queryIntentActivities 只返回系统那几个 -->
+    <!-- 只用于检查更新：拉一份 update.json、下 APK。不传任何数据出去 -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
     <queries>
         <intent>
             <action android:name="android.intent.action.GET_CONTENT" />

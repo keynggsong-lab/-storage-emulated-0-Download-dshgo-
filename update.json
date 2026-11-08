@@ -1,0 +1,9 @@
+{
+  "versionCode": 26110822,
+  "versionName": "1.1108.2259",
+  "url": "https://github.com/keynggsong-lab/-storage-emulated-0-Download-dshgo-/releases/download/v1.1108.2259/DshGoTool.apk",
+  "sha256": "dfb18dc5912a7f1568466f9a7ad46547fb87942d9d0fc0b194fd88616717b354",
+  "size": 2332355,
+  "notes": "首个公开版本：状态自检、提示词分层与方案、插件注入、网关与日志、云更新检查。",
+  "minSupported": 26110722
+}

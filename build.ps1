@@ -5,7 +5,11 @@ $ErrorActionPreference = "Stop"
 $JK   = "D:\ace5\android-build\jdk"
 $BT   = "D:\ace5\android-build\build-tools\android-14"
 $PLAT = "D:\ace5\android-build\platform-36\android-36\android.jar"
-$KS   = "D:\ace5\android-build\debug.keystore"
+$KS   = "D:\ace5\android-build\release.keystore"
+$KSPW = "D:\ace5\android-build\release.keystore.pass"
+$ALIAS = "dshtool"
+# 发布用的仓库标识，update.json 里的下载地址按它拼
+$REPO = "keynggsong-lab/-storage-emulated-0-Download-dshgo-"
 
 $ROOT = Split-Path -Parent $MyInvocation.MyCommand.Path
 $APP  = Join-Path $ROOT "app"
@@ -69,11 +73,32 @@ Write-Output "=== 6) zipalign ==="
 if ($LASTEXITCODE -ne 0) { throw "zipalign failed" }
 
 Write-Output "=== 7) sign ==="
-if (-not (Test-Path $KS)) { throw "missing keystore: $KS" }
-& "$BT\apksigner.bat" sign --ks $KS --ks-pass pass:android --key-pass pass:android `
-  --ks-key-alias androiddebugkey --out $APK "$OUT\aligned.apk"
+if (-not (Test-Path $KS)) { throw "missing release keystore: $KS（不要用 debug keystore 发版）" }
+if (-not (Test-Path $KSPW)) { throw "missing keystore password file: $KSPW" }
+$PW = (Get-Content $KSPW -Raw).Trim()
+& "$BT\apksigner.bat" sign --ks $KS --ks-pass "pass:$PW" --key-pass "pass:$PW" `
+  --ks-key-alias $ALIAS --out $APK "$OUT\aligned.apk"
 if ($LASTEXITCODE -ne 0) { throw "apksigner failed" }
 
 Write-Output "=== 8) verify ==="
 & "$BT\aapt2.exe" dump badging $APK | Select-Object -First 3
 Write-Output ("APK -> " + $APK + "  " + [math]::Round((Get-Item $APK).Length / 1KB) + " KB")
+
+Write-Output "=== 9) update.json ==="
+$SHA = (Get-FileHash $APK -Algorithm SHA256).Hash.ToLower()
+$UPD = [ordered]@{
+  versionCode  = [int]$VCODE
+  versionName  = $VNAME
+  url          = "https://github.com/$REPO/releases/download/v$VNAME/DshGoTool.apk"
+  sha256       = $SHA
+  size         = (Get-Item $APK).Length
+  notes        = ""
+  minSupported = [int]([int]$VCODE - 100)
+}
+$json = $UPD | ConvertTo-Json
+$utf8 = New-Object System.Text.UTF8Encoding($false)
+[System.IO.File]::WriteAllText("$OUT\update.json", $json, $utf8)
+# 源码仓库里也放一份，方便 git 提交后直接生效
+$REPO_ROOT = "D:\dsh桌面版\A\DshGoTool"
+if (Test-Path $REPO_ROOT) { Copy-Item "$OUT\update.json" (Join-Path $REPO_ROOT "update.json") -Force }
+Write-Output ("update.json  sha256=" + $SHA)

@@ -350,6 +350,111 @@ public class MainActivity extends Activity {
         rootView.addView(b, 0, Ui.lpW());
     }
 
+    // ---------------------------------------------------------------- 云更新
+
+    /** manual=true 时无论有没有新版本都给反馈；false 只在真有新版本时才弹。 */
+    public void checkUpdate(final boolean manual) {
+        new Thread(new Runnable() {
+            @Override public void run() {
+                try {
+                    final Update.Info info = Update.fetch(paths.updateUrl());
+                    final int cur = Update.versionCode(MainActivity.this);
+                    if (info.code <= cur) {
+                        if (manual) {
+                            runOnUiThread(new Runnable() {
+                                @Override public void run() {
+                                    android.widget.Toast.makeText(MainActivity.this,
+                                            "已是最新版本（" + Update.versionName(MainActivity.this) + "）",
+                                            android.widget.Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                        }
+                        return;
+                    }
+                    runOnUiThread(new Runnable() {
+                        @Override public void run() { askUpdate(info); }
+                    });
+                } catch (Exception e) {
+                    if (!manual) return;
+                    final String msg = e.getMessage() == null ? e.toString() : e.getMessage();
+                    runOnUiThread(new Runnable() {
+                        @Override public void run() {
+                            android.widget.Toast.makeText(MainActivity.this,
+                                    "检查更新失败：" + msg, android.widget.Toast.LENGTH_LONG).show();
+                        }
+                    });
+                }
+            }
+        }).start();
+    }
+
+    private void askUpdate(final Update.Info info) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("新版本 ").append(info.name)
+          .append("（当前 ").append(Update.versionName(this)).append("）");
+        if (info.size > 0) sb.append("\n大小 ").append(info.size / 1024 / 1024).append(" MB");
+        if (info.notes != null && !info.notes.isEmpty()) sb.append("\n\n").append(info.notes);
+        sb.append("\n\n下载后自动安装，重开 App 生效。");
+        Ui.dialog(this)
+                .setTitle("有新版本")
+                .setMessage(sb.toString())
+                .setPositiveButton("更新", new android.content.DialogInterface.OnClickListener() {
+                    @Override public void onClick(android.content.DialogInterface d, int w) {
+                        doUpdate(info);
+                    }
+                })
+                .setNegativeButton("稍后", null)
+                .show();
+    }
+
+    private void doUpdate(final Update.Info info) {
+        final android.app.ProgressDialog pd = new android.app.ProgressDialog(this);
+        pd.setMessage("正在下载…");
+        pd.setCancelable(false);
+        pd.show();
+        new Thread(new Runnable() {
+            @Override public void run() {
+                try {
+                    final java.io.File apk = Update.download(MainActivity.this, info);
+                    runOnUiThread(new Runnable() {
+                        @Override public void run() { pd.setMessage("正在安装…"); }
+                    });
+                    final String r = Update.install(apk);
+                    runOnUiThread(new Runnable() {
+                        @Override public void run() {
+                            pd.dismiss();
+                            if ("OK".equals(r)) {
+                                Ui.dialog(MainActivity.this)
+                                        .setTitle("已安装 " + info.name)
+                                        .setMessage("重开 App 生效。")
+                                        .setPositiveButton("知道了", null)
+                                        .show();
+                            } else {
+                                Ui.dialog(MainActivity.this)
+                                        .setTitle("安装失败")
+                                        .setMessage(r + "\n\nAPK 已下到：\n" + apk.getAbsolutePath())
+                                        .setPositiveButton("知道了", null)
+                                        .show();
+                            }
+                        }
+                    });
+                } catch (final Exception e) {
+                    final String msg = e.getMessage() == null ? e.toString() : e.getMessage();
+                    runOnUiThread(new Runnable() {
+                        @Override public void run() {
+                            pd.dismiss();
+                            Ui.dialog(MainActivity.this)
+                                    .setTitle("更新失败")
+                                    .setMessage(msg)
+                                    .setPositiveButton("知道了", null)
+                                    .show();
+                        }
+                    });
+                }
+            }
+        }).start();
+    }
+
     // ---------------------------------------------------------------- 启动图
 
     /**
@@ -561,6 +666,8 @@ public class MainActivity extends Activity {
                         current = -1;
                         switchTo(0);
                         bootDone = true;
+                        // 自检走完再查更新：网络慢也不拖启动，没新版本就静默
+                        if (paths.updateAuto()) checkUpdate(false);
                     }
                 });
             }
