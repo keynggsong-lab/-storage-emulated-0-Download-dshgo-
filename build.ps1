@@ -95,7 +95,7 @@ $UPD = [ordered]@{
   url          = "https://gh-proxy.com/https://github.com/$REPO/releases/download/$VNAME/DshGoTool.apk"
   sha256       = $SHA
   size         = (Get-Item $APK).Length
-  notes        = $(if (Test-Path (Join-Path $APP "notes.txt")) { (Get-Content (Join-Path $APP "notes.txt") -Raw).Trim() } else { "" })
+  notes        = $(if (Test-Path (Join-Path $APP "notes.txt")) { (Get-Content (Join-Path $APP "notes.txt") -Raw -Encoding UTF8).Trim() } else { "" })
   minSupported = [int]([int]$VCODE - 100)
 }
 $json = $UPD | ConvertTo-Json

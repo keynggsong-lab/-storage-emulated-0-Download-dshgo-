@@ -1,9 +1,9 @@
 {
-    "versionCode":  10001,
-    "versionName":  "1.0.1",
-    "url":  "https://gh-proxy.com/https://github.com/keynggsong-lab/-storage-emulated-0-Download-dshgo-/releases/download/1.0.1/DshGoTool.apk",
-    "sha256":  "4787479aae78025816ac9e601a283e0ae80128586f63999a0278bc3ce8c1997a",
-    "size":  2332355,
-    "notes":  "淇锛氶噸鍚?7863 璁や笉鍑轰笂娓哥▼搴忓悕銆?\n涓婃父鐩綍閲岃繕鏈?dnsfix 杩欑被杈呭姪绋嬪簭锛屾寜鈥滅涓€涓棤鎵╁睍鍚嶇殑鍙墽琛屾枃浠垛€濇寫浼氭寫閿欙紝缁撴灉鏄妸杩涚▼鏉€浜嗗張璧蜂笉鏉ャ€佹姤鈥滆繕鍦ㄧ洃鍚紝鏉€涓嶆帀鈥濄€?鐜板湪鍏堥棶 7863 绔彛涓婃鍦ㄨ窇鐨勮繘绋嬪彨浠€涔堬紙鐩存帴璇?/proc/\u003cpid\u003e/comm锛夛紝璁や笉鍑烘潵鎵嶉€€鍥炴寜鍚嶅瓧鐚溿€?",
-    "minSupported":  9901
+  "versionCode": 10001,
+  "versionName": "1.0.1",
+  "url": "https://gh-proxy.com/https://github.com/keynggsong-lab/-storage-emulated-0-Download-dshgo-/releases/download/1.0.1/DshGoTool.apk",
+  "sha256": "4787479aae78025816ac9e601a283e0ae80128586f63999a0278bc3ce8c1997a",
+  "size": 2332355,
+  "notes": "修复：重启 7863 认不出上游程序名。\n\n上游目录里还有 dnsfix 这类辅助程序，按“第一个无扩展名的可执行文件”挑会挑错，结果是把进程杀了又起不来、报“还在监听，杀不掉”。\n现在先问 7863 端口上正在跑的进程叫什么（直接读 /proc/<pid>/comm），认不出来才退回按名字猜。",
+  "minSupported": 9900
 }
